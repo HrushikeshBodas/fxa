@@ -13,6 +13,7 @@ const Sentry = require('@sentry/node');
 const validators = require('./validators');
 
 const HEX_STRING = validators.HEX_STRING;
+const MAX_SECONDARY_EMAILS = 10;
 
 async function updateZendeskPrimaryEmail(
   zendeskClient,
@@ -621,6 +622,11 @@ module.exports = (
         };
 
         await customs.check(request, primaryEmail, 'createEmail');
+
+        const account = await db.account(uid);
+        if (account.emails.length >= MAX_SECONDARY_EMAILS) {
+          throw error.maxSecondaryEmailsReached();
+        }
 
         if (!sessionToken.emailVerified) {
           throw error.unverifiedAccount();
